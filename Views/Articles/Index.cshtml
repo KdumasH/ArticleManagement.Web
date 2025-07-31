@@ -1,0 +1,66 @@
+﻿@using ArticleManagement.Web.Models.Articles
+@using ArticleManagement.Web.Models.Shared
+@model PaginatedResponse<ArticleViewModel>
+
+@{
+  ViewData["Title"] = "Lista de Artículos";
+}
+
+<h2 class="mb-4">Últimos artículos</h2>
+
+@if (Model?.Items != null && Model.Items.Any())
+{
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+    @foreach (var article in Model.Items)
+    {
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">@article.Title</h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+              Por <strong>@article.Author</strong> - @article.PublishedDate.ToShortDateString()
+            </h6>
+            <p class="card-text">
+              @(
+                  article.Content.Length > 200
+                  ? article.Content.Substring(0, 200) + "..."
+                  : article.Content
+                  )
+            </p>
+            <a href="@Url.Action("Details", "Articles", new { id = article.Id })" class="btn btn-primary">
+              Ver artículo
+            </a>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <nav class="mt-4 d-flex justify-content-center">
+    <ul class="pagination">
+      @if (Model.Pagination.HasPreviousPage)
+      {
+        <li class="page-item">
+          <a class="page-link" href="?pageIndex=@(Model.Pagination.PageIndex - 1)&pageSize=@Model.Pagination.PageSize">Anterior</a>
+        </li>
+      }
+
+      <li class="page-item active">
+        <span class="page-link">@Model.Pagination.PageIndex</span>
+      </li>
+
+      @if (Model.Pagination.HasNextPage)
+      {
+        <li class="page-item">
+          <a class="page-link" href="?pageIndex=@(Model.Pagination.PageIndex + 1)&pageSize=@Model.Pagination.PageSize">Siguiente</a>
+        </li>
+      }
+    </ul>
+  </nav>
+}
+else
+{
+  <div class="alert alert-info">
+    No hay artículos disponibles.
+  </div>
+}

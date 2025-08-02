@@ -3,6 +3,7 @@ using ArticleManagement.Web.Models.Shared;
 using ArticleManagement.Web.Services.Interfaces;
 using Newtonsoft.Json;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace ArticleManagement.Web.Services;
@@ -10,12 +11,13 @@ namespace ArticleManagement.Web.Services;
 public class ArticleService : IArticleService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
 
-    public ArticleService(IHttpClientFactory httpClientFactory)
+    public ArticleService(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
     {
         _httpClientFactory = httpClientFactory;
-
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<Result<PaginatedResponse<ArticleDto>>> GetPaginatedAsync(GetArticlesPaginatedRequest request)
@@ -78,86 +80,6 @@ public class ArticleService : IArticleService
         return Result<PaginatedResponse<ArticleDto>>.Success(apiResult.Value);
     }
 
-
-    //public async Task<Result<PaginatedResponse<ArticleViewModel>>> GetPaginatedAsync(GetArticlesPaginatedRequest request)
-    //{
-    //    var client = _httpClientFactory.CreateClient("ApiClient");
-
-    //    // Construcción de los query params
-    //    var queryParams = new Dictionary<string, string?>
-    //{
-    //    { "title", request.Title },
-    //    { "author", request.Author },
-    //    { "publishedAfter", request.PublishedAfter?.ToString("o") },
-    //    { "publishedBefore", request.PublishedBefore?.ToString("o") },
-    //    { "orderBy", request.OrderBy },
-    //    { "sortDirection", request.SortDirection },
-    //    { "pageIndex", request.PageIndex.ToString() },
-    //    { "pageSize", request.PageSize.ToString() }
-    //};
-
-    //    var query = string.Join("&", queryParams
-    //        .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
-    //        .Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value!)}"));
-
-    //    var response = await client.GetAsync($"/api/articles/paginated?{query}");
-
-    //    if (!response.IsSuccessStatusCode)
-    //    {
-    //        var errorContent = await response.Content.ReadAsStringAsync();
-    //        return Result<PaginatedResponse<ArticleViewModel>>.Failure(
-    //            new Error("API_ERROR", $"Error {response.StatusCode}: {errorContent}")
-    //        );
-    //    }
-
-    //    var json = await response.Content.ReadAsStringAsync();
-    //    Console.WriteLine(json);
-
-    //    var apiResult = JsonConvert.DeserializeObject<ApiResponse<PaginatedResponse<ArticleDto>>>(json);
-
-    //    if (apiResult == null)
-    //    {
-    //        return Result<PaginatedResponse<ArticleViewModel>>.Failure(
-    //            new Error("DESERIALIZATION_ERROR", "No se pudo deserializar la respuesta del servidor.")
-    //        );
-    //    }
-
-    //    if (!apiResult.IsSuccess)
-    //    {
-    //        return Result<PaginatedResponse<ArticleViewModel>>.Failure(
-    //            new Error("API_FAILURE", "La operación no fue exitosa.")
-    //        );
-    //    }
-
-    //    if (apiResult.Value == null || apiResult.Value.Items == null || apiResult.Value.Pagination == null)
-    //    {
-    //        return Result<PaginatedResponse<ArticleViewModel>>.Failure(
-    //            new Error("NULL_DATA", "La respuesta de la API no contiene datos válidos.")
-    //        );
-    //    }
-
-    //    // Mapeo manual ArticleDto → ArticleViewModel
-    //    var viewModels = apiResult.Value.Items.Select(dto => new ArticleViewModel
-    //    {
-    //        Id = dto.id,
-    //        Title = dto.title,
-    //        Content = dto.content,
-    //        PublishedDate = dto.publishedDate,
-    //        Author = dto.userName
-    //    }).ToList();
-
-    //    var paginated = new PaginatedResponse<ArticleViewModel>(
-    //        new PagedList<ArticleViewModel>(
-    //            viewModels,
-    //            apiResult.Value.Pagination.TotalCount,
-    //            apiResult.Value.Pagination.PageIndex,
-    //            apiResult.Value.Pagination.PageSize
-    //        ));
-
-    //    return Result<PaginatedResponse<ArticleViewModel>>.Success(paginated);
-    //}
-
-
     public async Task<Result<ArticleDetailDto>> GetByIdAsync(Guid id)
     {
         var client = _httpClientFactory.CreateClient("ApiClient");
@@ -186,5 +108,98 @@ public class ArticleService : IArticleService
         return Result<ArticleDetailDto>.Success(article);
     }
 
+    public async Task<Result<Guid>> CreateAsync(CreateArticleRequest request)
+    {
+        var client = _httpClientFactory.CreateClient("ApiClient");
 
+        var token = _httpContextAccessor.HttpContext?.Session.GetString("AuthToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            return Result<Guid>.Failure(
+                new Error("UNAUTHORIZED", "No se ha proporcionado un token de autenticación.")
+            );
+        }
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync("api/articles", request);
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return Result<Guid>.Failure(
+                new Error("API_ERROR", $"Error {response.StatusCode}: {content}")
+            );
+        }
+
+        var createResult = JsonConvert.DeserializeObject<CreateArticleCommandResponse>(content);
+
+        if (createResult == null || createResult.Id == Guid.Empty)
+        {
+            return Result<Guid>.Failure(
+                new Error("API_FAILURE", $"No se pudo obtener el ID: {content}")
+            );
+        }
+
+        return Result<Guid>.Success(createResult.Id);
+    }
+
+    public async Task<Result<bool>> UpdateAsync(UpdateArticleRequest request)
+    {
+        var client = _httpClientFactory.CreateClient("ApiClient");
+
+        var token = _httpContextAccessor.HttpContext?.Session.GetString("AuthToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            return Result<bool>.Failure(
+                new Error("UNAUTHORIZED", "No se ha proporcionado un token de autenticación.")
+            );
+        }
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PutAsJsonAsync($"api/articles/{request.Id}", request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            return Result<bool>.Failure(
+                new Error("API_ERROR", $"Error {response.StatusCode}: {content}")
+            );
+        }
+
+        // API devolvió 204 NoContent, lo consideramos éxito
+        return Result<bool>.Success(true);
+    }
+
+    public async Task<Result<bool>> DeleteAsync(Guid id)
+    {
+        var client = _httpClientFactory.CreateClient("ApiClient");
+
+        var token = _httpContextAccessor.HttpContext?.Session.GetString("AuthToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            return Result<bool>.Failure(
+                new Error("UNAUTHORIZED", "No se ha proporcionado un token de autenticación.")
+            );
+        }
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.DeleteAsync($"api/articles/{id}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            return Result<bool>.Failure(
+                new Error("API_ERROR", $"Error {response.StatusCode}: {content}")
+            );
+        }
+
+        return Result<bool>.Success(true);
+    }
 }

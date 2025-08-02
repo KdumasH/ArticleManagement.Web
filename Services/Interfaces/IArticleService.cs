@@ -8,7 +8,9 @@ public interface IArticleService
     Task<Result<PaginatedResponse<ArticleDto>>> GetPaginatedAsync(GetArticlesPaginatedRequest request);
     //Task<Result<PaginatedResponse<ArticleDto>>> GetPaginatedAsync(GetArticlesPaginatedRequest request);
     Task<Result<ArticleDetailDto>> GetByIdAsync(Guid id);
-    //Task<Result<ArticleViewModel>> CreateAsync(CreateArticleRequest request);
-    //Task<Result<ArticleViewModel>> UpdateAsync(Guid id, UpdateArticleRequest request);
-    //Task<Result<bool>> DeleteAsync(Guid id);
+
+    Task<Result<Guid>> CreateAsync(CreateArticleRequest request);
+    Task<Result<bool>> UpdateAsync(UpdateArticleRequest request);
+    Task<Result<bool>> DeleteAsync(Guid id);
+
 }

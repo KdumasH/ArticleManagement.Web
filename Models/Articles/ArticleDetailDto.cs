@@ -2,10 +2,10 @@
 
 public class ArticleDetailDto
 {
-    public Guid Id { get; set; }
-    public string Title { get; set; } = null!;
-    public DateTime PublishedDate { get; set; }
-    public string Content { get; set; } = null!;
-    public string UserName { get; set; } = null!;
-    public List<CommentDto> Comments { get; set; } = new();
+    public Guid id { get; set; }
+    public string title { get; set; } = null!;
+    public DateTime publishedDate { get; set; }
+    public string content { get; set; } = null!;
+    public string userName { get; set; } = null!;
+    public List<CommentDto> comments { get; set; } = new();
 }

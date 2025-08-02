@@ -1,12 +1,17 @@
 using ArticleManagement.Web.Helpers;
+using ArticleManagement.Web.Middleware;
 using ArticleManagement.Web.Services;
 using ArticleManagement.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services
+    .AddControllersWithViews()
+    .AddSessionStateTempDataProvider();
+builder.Services.AddSingleton<ITempDataDictionaryFactory, TempDataDictionaryFactory>();
 builder.Services.AddHttpClient("ApiClient", client =>
 {
   client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]!);
@@ -35,11 +40,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
+app.UseSession(); // debe ir después de UseRouting
+app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseAuthentication(); // si estás usando auth con JWT o cookies
 app.UseAuthorization();
-app.UseSession(); // debe ir después de UseRouting
 
 app.MapControllerRoute(
     name: "default",

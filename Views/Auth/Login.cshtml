@@ -4,26 +4,68 @@
   ViewData["Title"] = "Iniciar Sesión";
 }
 
-<h2 class="text-center mb-4">Iniciar Sesión</h2>
+<div class="d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card shadow-lg p-4" style="max-width: 400px; width: 100%;">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-secondary mt-2">Iniciar Sesión</h2>
+        </div>
 
-<form asp-action="Login" method="post">
-  <div class="form-group mb-3">
-    <label asp-for="Username" class="form-label"></label>
-    <input asp-for="Username" class="form-control" />
-    <span asp-validation-for="Username" class="text-danger"></span>
-  </div>
+        <form asp-action="Login" method="post" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label asp-for="Username" class="form-label fw-bold text-secondary"></label>
+                <input asp-for="Username" class="form-control" placeholder="Ingresa tu usuario" required />
+                <span asp-validation-for="Username" class="text-danger small"></span>
+                <div class="invalid-feedback">Por favor ingresa tu usuario.</div>
+            </div>
 
-  <div class="form-group mb-4">
-    <label asp-for="Password" class="form-label"></label>
-    <input asp-for="Password" class="form-control" />
-    <span asp-validation-for="Password" class="text-danger"></span>
-  </div>
+            <div class="mb-4">
+                <label asp-for="Password" class="form-label fw-bold text-secondary"></label>
+                <input asp-for="Password" type="password" class="form-control " placeholder="Ingresa tu contraseña" required />
+                <span asp-validation-for="Password" class="text-danger small"></span>
+                <div class="invalid-feedback">Por favor ingresa tu contraseña.</div>
+            </div>
 
-  <button type="submit" class="btn btn-primary w-100">Entrar</button>
-</form>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-box-arrow-in-right"></i> Entrar
+            </button>
+        </form>
 
-<div class="text-center mt-3">
-  ¿No tienes una cuenta? <a asp-controller="Auth" asp-action="Register">Regístrate</a>
+        <!-- Enlace de registro -->
+        <div class="text-center mt-3">
+            <small class="text-muted">¿No tienes una cuenta?</small>
+        </div>
+        <div class="text-center mt-3">
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createUserModal">Reg&iacutestrate</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createUserModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createUserModalLabel">Registrar usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @await Html.PartialAsync("_CreateUser")
+                @* <form>
+                    <div class="mb-3">
+                        <label for="recipient-name" class="col-form-label">Recipient:</label>
+                        <input type="text" class="form-control" id="recipient-name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="message-text" class="col-form-label">Message:</label>
+                        <textarea class="form-control" id="message-text"></textarea>
+                    </div>
+                </form> *@
+            </div>
+@*             <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Send message</button>
+            </div> *@
+        </div>
+    </div>
 </div>
 
 @section Scripts {

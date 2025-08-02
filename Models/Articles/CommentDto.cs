@@ -3,7 +3,7 @@
 public class CommentDto
 {
     public Guid id { get; set; }            // asumiendo que el comentario tiene id
-    public string text { get; set; } = null!;
-    public string userName { get; set; } = null!;
+    public string content { get; set; } = null!;
+    public string author { get; set; } = null!;
     public DateTime createdAt { get; set; }
 }

@@ -4,74 +4,131 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
+<div class="container py-4">
+    <!-- Detalles del artículo -->
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h2 class="card-title fw-bold fw-bold text-primary mb-3">Detalles del artículo</h2>
+            <p class="fst-italic small text-secondary ">@Model.Author @Model.PublishedDate.ToString("dd/MM/yyyy HH:mm")</p>
 
-<div>
-    <h4>Article Details</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Id)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Id)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.PublishedDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.PublishedDate)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Content)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Content)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Author)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Author)
-        </dd>
-    </dl>
-</div>
+            <p>@Model.Content</p>
 
-@if (Model.Comments != null && Model.Comments.Any())
-{
-    <h4>Comentarios</h4>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Contenido</th>
-                <th>Autor</th>
-                <th>Fecha</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var comment in Model.Comments)
-            {
-                <tr>
-                    <td>@comment.Text</td>
-                    <td>@comment.Author</td>
-                    <td>@comment.CreatedAt.ToString("g")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+        </div>
+    </div>
+
+    <!-- Botón para mostrar comentarios -->
+    <div class="text-center mb-8 mt-5">
+        <button id="toggleCommentsBtn" class="btn btn-outline-primary btn-sm">
+            Mostrar comentarios
+        </button>
+    </div>
+
+    <!-- Sección de comentarios -->
+    <div id="commentsSection" class="row justify-content-center mt-3">
+        <div class="col-md-10">
+
+            <!-- Formulario para agregar comentario -->
+            <h5 class="fw-semibold text-secondary mb-3">Agregar comentario</h5>
+            <form id="addCommentForm" class="needs-validation" novalidate>
+                <input type="hidden" class="fst-italic small text-secondary" id="articleId" value="@Model.Id" />
+                <input type="hidden" id="userId" value="@User.FindFirst("sub")?.Value" />
+
+                <div class="mb-3">
+                    <label for="commentContent" class="form-label">Comentario</label>
+                    <textarea class="form-control" id="commentContent" rows="3" placeholder="Escribe tu comentario..." required></textarea>
+                    <div class="invalid-feedback">El comentario no puede estar vacío.</div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success">
+                        Enviar
+                    </button>
+                </div>
+            </form>
+
+            <!-- Lista de comentarios -->
+            <hr class="bg-secondary" />
+            <h5 class="text-secondary mb-3">Comentarios</h5>
+            <ul id="commentsList" class="list-group mb-4">
+                @if (Model.Comments != null && Model.Comments.Any())
+                {
+                    foreach (var comment in Model.Comments)
+                    {
+                        <li class="list-group-item">
+                            <strong class="fst-italic">@comment.Author</strong>
+                            <small class="text-muted fst-italic">(@comment.CreatedAt.ToString("g"))</small>
+                            <div>@comment.Text</div>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li class="list-group-item text-muted">No hay comentarios.</li>
+                }
+            </ul>
+        </div>
+
+    </div>
+
+
+@section Scripts {
+        <script>
+
+            $("#toggleCommentsBtn").click(function () {
+                const section = $("#commentsSection");
+                if (section.is(":visible")) {
+                    section.hide();
+                    $(this).text("Mostrar comentarios");
+                } else {
+                    section.show();
+                    $(this).text("Ocultar comentarios");
+                }
+            });
+
+            $("#addCommentForm").submit(function (e) {
+                e.preventDefault();
+
+                var articleId = $("#articleId").val();
+                var userId = "@ViewBag.CurrentUser";;
+
+                var data = {
+                    articleId: articleId,
+                    content: $("#commentContent").val(),
+                    userId: userId
+                };
+
+                $.ajax({
+                    url: `https://localhost:7133/api/Articles/${articleId}/comments`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                         const newCommentHtml =
+                             '<li class="list-group-item">'+
+                                '<strong class="fst-italic">@User.Identity.Name</strong>'+
+                                '<small class="text-muted fst-italic">(${new Date().toLocaleString()})</small>'+
+                                '<div>${$("#commentContent").val()}</div>'+
+                           ' </li>'
+                        ;
+                         if ($("#commentsList li").length === 1 && $("#commentsList li").text().includes("No hay comentarios")) {
+                            $("#commentsList").empty();
+                        }
+                        $("#commentsList").append(newCommentHtml);
+                        $("#commentContent").val('');
+                        location.reload();
+                    },
+                    error: function () {
+                            try {
+                                const res = JSON.parse(xhr.responseText);
+                                if (res.toastMessage) {
+                                    mostrarToast(res.toastMessage, res.toastType);
+                                }
+                            } catch {
+                                mostrarToast("Error desconocido al conectarse con el servicio.");
+                              }
+                    }
+                });
+            });
+
+        </script>
+
 }
-else
-{
-    <p>No hay comentarios disponibles para este artículo.</p>
-}
-
-<div>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
-    <a asp-action="Index">Back to List</a>
-</div>

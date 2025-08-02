@@ -6,7 +6,7 @@
   ViewData["Title"] = "Lista de Artículos";
 }
 
-<h2 class="mb-4">Últimos artículos</h2>
+@* <h2 class="mb-4">Últimos artículos</h2>
 
 @if (Model?.Items != null && Model.Items.Any())
 {
@@ -34,7 +34,33 @@
         </div>
       </div>
     }
-  </div>
+  </div> *@
+
+<h2 class="mb-4">Últimos artículos</h2>
+
+@if (Model?.Items != null && Model.Items.Any())
+{
+    <div class="list-group">
+        @foreach (var article in Model.Items)
+        {
+            <div class="list-group-item list-group-item-action mb-3 shadow-sm rounded">
+                <h5 class="mb-1">@article.Title</h5>
+                <small class="text-muted">
+                    Por <strong>@article.Author</strong> - @article.PublishedDate.ToShortDateString()
+                </small>
+                <p class="mb-1 mt-2">
+                    @(
+                                article.Content.Length > 200
+                                ? article.Content.Substring(0, 200) + "..."
+                                : article.Content
+                                )
+            </p>
+            <a href="@Url.Action("Details", "Articles", new { id = article.Id })" class="btn btn-sm btn-primary">
+                Ver artículo
+            </a>
+        </div>
+        }
+    </div>
 
   <nav class="mt-4 d-flex justify-content-center">
     <ul class="pagination">

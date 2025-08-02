@@ -7,5 +7,6 @@ public class ArticleDetailDto
     public DateTime publishedDate { get; set; }
     public string content { get; set; } = null!;
     public string userName { get; set; } = null!;
+    public string CreatedByUserId { get; set; } = "";
     public List<CommentDto> comments { get; set; } = new();
 }

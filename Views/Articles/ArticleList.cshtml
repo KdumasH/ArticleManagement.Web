@@ -87,7 +87,7 @@
                             try {
                                 const res = JSON.parse(xhr.responseText);
                                 if (res.toastMessage) {
-                                    mostrarToast(res.toastMessage, res.toastType || "danger");
+                                    mostrarToast(res.toastMessage, "danger");
                                 } else {
                                     mostrarToast("Ocurrió un error al intentar eliminar el artículo.", "danger");
                                 }

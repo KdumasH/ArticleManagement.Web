@@ -41,9 +41,8 @@ namespace ArticleManagement.Web.Middleware
 
             if (esAjax)
             {
-                // Respuesta especial para AJAX
                 context.Response.ContentType = "application/json";
-                context.Response.StatusCode = 503; // Service Unavailable
+                context.Response.StatusCode = 503; 
                 var json = JsonSerializer.Serialize(new
                 {
                     success = false,
@@ -54,12 +53,12 @@ namespace ArticleManagement.Web.Middleware
             }
             else
             {
-                // Guardar mensaje en TempData para página completa
                 var tempData = _tempDataFactory.GetTempData(context);
                 tempData["ToastMessage"] = mensaje;
                 tempData["ToastType"] = "danger";
                 tempData.Save();
-                // Volver a la página anterior o inicio
+
+
                 var referer = context.Request.Headers["Referer"].ToString();
                 if (!string.IsNullOrEmpty(referer))
                     context.Response.Redirect(referer);

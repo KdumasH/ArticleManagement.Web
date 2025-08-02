@@ -2,83 +2,80 @@
 using ArticleManagement.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace ArticleManagement.Web.Controllers
+namespace ArticleManagement.Web.Controllers;
+
+public class AuthController : Controller
 {
-    public class AuthController : Controller
+    private readonly IAuthService _authService;
+
+    public AuthController(IAuthService authService)
     {
-        private readonly IAuthService _authService;
+        _authService = authService;
+    }
 
-        public AuthController(IAuthService authService)
+    [HttpGet]
+    public IActionResult Login()
+    {
+        ViewBag.HideMenu = true;
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Login(LoginViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return RedirectToAction("Login");
+
+        var result = await _authService.LoginAsync(model.Username, model.Password);
+
+        if (result is null)
         {
-            _authService = authService;
-        }
-
-        [HttpGet]
-        public IActionResult Login()
-        {
-            ViewBag.HideMenu = true;
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model)
-        {
-            if (!ModelState.IsValid)    
-                return View(model);
-
-            var result = await _authService.LoginAsync(model.Username, model.Password);
-
-            if (result is null)
-            {
-                ModelState.AddModelError(string.Empty, "Invalid username or password.");
-                return View(model);
-            }
-
-            // Guardar token JWT en cookie
-            Response.Cookies.Append("jwt_token", result.Token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                Expires = result.Expiration
-            });
-            // Guardar token o info de usuario en la sesión si lo necesitas
-            //HttpContext.Session.SetString("Token", result.Value.Token);
-            //HttpContext.Session.SetString("Username", result.Value.Username);
-
-            // ✅ Redirigir a la vista de artículos
-            return RedirectToAction("Index", "Articles");
-
-        }
-
-        //[HttpGet]
-        //public IActionResult Register()
-        //{
-        //    return View();
-        //}
-
-        [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var result = await _authService.RegisterAsync(model.NewUsername, model.Email, model.NewPassword);
-
-            if (!result)
-            {
-                ModelState.AddModelError(string.Empty, "Registration failed.");
-                TempData["SuccessMessage"] = "Registration failed. Please try again.";
-            }
-
-            TempData["SuccessMessage"] = "Registration successful. Please login.";
+            ModelState.AddModelError(string.Empty, "Invalid username or password.");
+            TempData["ToastMessage"] = "Usuario y/o contraseña inválido.";
+            TempData["ToastType"] = "danger";
             return RedirectToAction("Login");
         }
 
-        [HttpGet]
-        public IActionResult Logout()
+        // Guardar token JWT en cookie
+        Response.Cookies.Append("jwt_token", result.Token, new CookieOptions
         {
-            Response.Cookies.Delete("jwt_token");
-            return RedirectToAction("Login");
+            HttpOnly = true,
+            Secure = true,
+            Expires = result.Expiration
+        });
+        // Guardar token o info de usuario en la sesión si lo necesitas
+        //HttpContext.Session.SetString("Token", result.Value.Token);
+        //HttpContext.Session.SetString("Username", result.Value.Username);
+
+        // ✅ Redirigir a la vista de artículos
+        return RedirectToAction("Index", "Articles");
+
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Register(RegisterViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var result = await _authService.RegisterAsync(model.NewUsername, model.Email, model.NewPassword, model.IsAdmin);
+
+        if (!result)
+        {
+            ModelState.AddModelError(string.Empty, "Registration failed.");
+            TempData["ToastMessage"] = "Error al registrar usuario, por favor intente de nuevo";
+            TempData["ToastType"] = "danger";
         }
+
+        TempData["ToastMessage"] = "El registro de usuario fue exitoso";
+        TempData["ToastType"] = "success";
+        return RedirectToAction("Login");
+    }
+
+    [HttpGet]
+    public IActionResult Logout()
+    {
+        Response.Cookies.Delete("jwt_token");
+        return RedirectToAction("Login");
     }
 }

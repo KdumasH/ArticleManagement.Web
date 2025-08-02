@@ -171,7 +171,6 @@ public class ArticleService : IArticleService
             );
         }
 
-        // API devolvió 204 NoContent, lo consideramos éxito
         return Result<bool>.Success(true);
     }
 

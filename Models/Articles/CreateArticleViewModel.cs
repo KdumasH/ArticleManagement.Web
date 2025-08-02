@@ -3,7 +3,7 @@
 namespace ArticleManagement.Web.Models.Articles;
  public class CreateArticleViewModel
 {
-    [Display(Name = "Title")]
+    [Display(Name = "Título")]
     [Required(ErrorMessage = "El título es obligatorio.")]
     public string Title { get; set; } = string.Empty;
 

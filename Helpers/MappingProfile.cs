@@ -1,27 +1,26 @@
 ﻿using AutoMapper;
 using ArticleManagement.Web.Models.Articles;
 
-namespace ArticleManagement.Web.Helpers
+namespace ArticleManagement.Web.Helpers;
+
+public class MappingProfile : Profile
 {
-    public class MappingProfile : Profile
+    public MappingProfile()
     {
-        public MappingProfile()
-        {
-            CreateMap<ArticleDto, ArticleViewModel>()
-                .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.userName));
+        CreateMap<ArticleDto, ArticleViewModel>()
+            .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.userName));
 
 
-            CreateMap<ArticleDetailDto, ArticleDetailViewModel>()
-           .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.userName));
+        CreateMap<ArticleDetailDto, ArticleDetailViewModel>()
+       .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.userName));
 
-            CreateMap<CommentDto, CommentViewModel>()
-                .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.author))
-                .ForMember(dest => dest.Text, opt => opt.MapFrom(src => src.content));
+        CreateMap<CommentDto, CommentViewModel>()
+            .ForMember(dest => dest.Author, opt => opt.MapFrom(src => src.author))
+            .ForMember(dest => dest.Text, opt => opt.MapFrom(src => src.content));
 
-            CreateMap<CreateArticleViewModel, CreateArticleRequest>();
+        CreateMap<CreateArticleViewModel, CreateArticleRequest>();
 
-            CreateMap<EditArticleViewModel, UpdateArticleRequest>();
-            CreateMap<ArticleDetailDto, EditArticleViewModel>();
-        }
+        CreateMap<EditArticleViewModel, UpdateArticleRequest>();
+        CreateMap<ArticleDetailDto, EditArticleViewModel>();
     }
 }

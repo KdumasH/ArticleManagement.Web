@@ -5,7 +5,6 @@
 }
 
 <div class="container py-4">
-    <!-- Detalles del artículo -->
     <div class="row justify-content-center">
         <div class="col-md-10">
             <h2 class="card-title fw-bold fw-bold text-primary mb-3">Detalles del artículo</h2>
@@ -16,18 +15,15 @@
         </div>
     </div>
 
-    <!-- Botón para mostrar comentarios -->
     <div class="text-center mb-8 mt-5">
         <button id="toggleCommentsBtn" class="btn btn-outline-primary btn-sm">
             Mostrar comentarios
         </button>
     </div>
 
-    <!-- Sección de comentarios -->
     <div id="commentsSection" class="row justify-content-center mt-3">
         <div class="col-md-10">
 
-            <!-- Formulario para agregar comentario -->
             <h5 class="fw-semibold text-secondary mb-3">Agregar comentario</h5>
             <form id="addCommentForm" class="needs-validation" novalidate>
                 <input type="hidden" class="fst-italic small text-secondary" id="articleId" value="@Model.Id" />
@@ -45,7 +41,6 @@
                 </div>
             </form>
 
-            <!-- Lista de comentarios -->
             <hr class="bg-secondary" />
             <h5 class="text-secondary mb-3">Comentarios</h5>
             <ul id="commentsList" class="list-group mb-4">
@@ -68,67 +63,68 @@
         </div>
 
     </div>
+</div>
 
 
 @section Scripts {
-        <script>
+    <script>
 
-            $("#toggleCommentsBtn").click(function () {
-                const section = $("#commentsSection");
-                if (section.is(":visible")) {
-                    section.hide();
-                    $(this).text("Mostrar comentarios");
-                } else {
-                    section.show();
-                    $(this).text("Ocultar comentarios");
+        $("#toggleCommentsBtn").click(function () {
+            const section = $("#commentsSection");
+            if (section.is(":visible")) {
+                section.hide();
+                $(this).text("Mostrar comentarios");
+            } else {
+                section.show();
+                $(this).text("Ocultar comentarios");
+            }
+        });
+
+        $("#addCommentForm").submit(function (e) {
+            e.preventDefault();
+
+            var articleId = $("#articleId").val();
+            var userId = "@ViewBag.CurrentUser";;
+
+            var data = {
+                articleId: articleId,
+                content: $("#commentContent").val(),
+                userId: userId
+            };
+
+            $.ajax({
+                url: `https://localhost:7133/api/Articles/${articleId}/comments`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (response) {
+                     const newCommentHtml =
+                         '<li class="list-group-item">'+
+                            '<strong class="fst-italic">@User.Identity.Name</strong>'+
+                            '<small class="text-muted fst-italic">(${new Date().toLocaleString()})</small>'+
+                            '<div>${$("#commentContent").val()}</div>'+
+                       ' </li>'
+                    ;
+                     if ($("#commentsList li").length === 1 && $("#commentsList li").text().includes("No hay comentarios")) {
+                        $("#commentsList").empty();
+                    }
+                    $("#commentsList").append(newCommentHtml);
+                    $("#commentContent").val('');
+                    location.reload();
+                },
+                error: function () {
+                        try {
+                            const res = JSON.parse(xhr.responseText);
+                            if (res.toastMessage) {
+                                mostrarToast(res.toastMessage, danger);
+                            }
+                        } catch {
+                            mostrarToast("Error desconocido al conectarse con el servicio.", "danger");
+                          }
                 }
             });
+        });
 
-            $("#addCommentForm").submit(function (e) {
-                e.preventDefault();
-
-                var articleId = $("#articleId").val();
-                var userId = "@ViewBag.CurrentUser";;
-
-                var data = {
-                    articleId: articleId,
-                    content: $("#commentContent").val(),
-                    userId: userId
-                };
-
-                $.ajax({
-                    url: `https://localhost:7133/api/Articles/${articleId}/comments`,
-                    method: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(data),
-                    success: function (response) {
-                         const newCommentHtml =
-                             '<li class="list-group-item">'+
-                                '<strong class="fst-italic">@User.Identity.Name</strong>'+
-                                '<small class="text-muted fst-italic">(${new Date().toLocaleString()})</small>'+
-                                '<div>${$("#commentContent").val()}</div>'+
-                           ' </li>'
-                        ;
-                         if ($("#commentsList li").length === 1 && $("#commentsList li").text().includes("No hay comentarios")) {
-                            $("#commentsList").empty();
-                        }
-                        $("#commentsList").append(newCommentHtml);
-                        $("#commentContent").val('');
-                        location.reload();
-                    },
-                    error: function () {
-                            try {
-                                const res = JSON.parse(xhr.responseText);
-                                if (res.toastMessage) {
-                                    mostrarToast(res.toastMessage, res.toastType);
-                                }
-                            } catch {
-                                mostrarToast("Error desconocido al conectarse con el servicio.");
-                              }
-                    }
-                });
-            });
-
-        </script>
+    </script>
 
 }

@@ -4,6 +4,6 @@ namespace ArticleManagement.Web.Models.Articles;
 
 public class CreateArticleCommandResponse
 {
-    [JsonProperty("id")] // si usas Newtonsoft.Json
+    [JsonProperty("id")]
     public Guid Id { get; set; }
 }

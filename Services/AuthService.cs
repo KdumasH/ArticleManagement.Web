@@ -29,18 +29,18 @@ public class AuthService : IAuthService
         if (result.UserId != Guid.Empty)
         {
             _httpContextAccessor.HttpContext?.Session.SetString("UserId", result.UserId.ToString());
+            _httpContextAccessor.HttpContext?.Session.SetString("Roles", result.Roles.FirstOrDefault()!);
         }
 
-        // Guardar token en sesión
         _httpContextAccessor.HttpContext?.Session.SetString("AuthToken", result!.Token);
 
         return result;
     }
 
-    public async Task<bool> RegisterAsync(string username, string email, string password)
+    public async Task<bool> RegisterAsync(string username, string email, string password, bool isAdmin)
     {
         var client = _httpClientFactory.CreateClient("ApiClient");
-        var response = await client.PostAsJsonAsync("/api/auth/register", new { username, email, password });
+        var response = await client.PostAsJsonAsync("/api/auth/register", new { username, email, password, isAdmin });
 
         if (!response.IsSuccessStatusCode)
             return false;
